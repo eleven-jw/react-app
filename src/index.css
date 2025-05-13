@@ -1,0 +1,18 @@
+@import '../assets/css/globel.css';
+
+.task-box {
+    margin: 0 50px;
+}
+.header {
+    margin-top: 200px;
+    display: flex;
+    justify-content: space-between;
+}
+.task-tag {
+    padding-bottom: 30px;
+}
+.task-tag .ant-tag {
+    padding-inline: 10px;
+    font-size: 14px;
+    line-height: 30px;
+}
