@@ -15,6 +15,9 @@ const CustomForm = forwardRef((props, ref) => {
     validateFields: () => {
       return form.validateFields(); // Ensure validateFields is exposed
     },
+    getFieldsValue: () => {
+      return form.getFieldsValue(); // Ensure getFieldsValue is exposed
+    },
   }));
   const handleFinish = (values) => {
     props.onFinish(values);

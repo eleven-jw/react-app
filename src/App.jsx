@@ -1,6 +1,6 @@
 // App.jsx
 import React, { useState, useRef } from "react";
-import { Button, Divider, Tag, message, Tabs } from "antd";
+import { Button, Divider, Tag, message, Space, Popconfirm } from "antd";
 import CustomTable from "./components/CustomTable";
 import CustomModal from "./components/CustomModal";
 import CustomForm from "./components/CustomForm";
@@ -44,26 +44,57 @@ const App = () => {
       },
     },
     { title: "Time", dataIndex: "time", key: "time" },
-    { title: "Action", dataIndex: "action", key: "action" },
+    {
+      title: "Action",
+      dataIndex: "action",
+      key: "action",
+      render: (_, record) => (
+        <Space>
+          <Popconfirm
+            title="Delete the task"
+            description="Are you sure to delete this task?"
+            onConfirm={() => onDeleteConform(record)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button type="link">Delete</Button>
+          </Popconfirm>
+          {+record.state !== 1 ? (
+            <Popconfirm
+              title="Delete the task"
+              description="Are you sure to compelete this task?"
+              onConfirm={(ß) => onCompleteConform(record)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="link">Compelete</Button>
+            </Popconfirm>
+          ) : null}
+        </Space>
+      ),
+    },
   ];
-
   const [selectedIndex, setSelectedIndex] = useState(1);
+  const [tasks, setTasks] = useState(dataSource);
+  const [filteredTasks, setFilteredTasks] = useState(dataSource);
+
   const onChange = (index) => {
-    if (index === selectedIndex) return;
     setSelectedIndex(index);
     console.log("Selected index:", index);
-    const filteredData = dataSource.filter((item) => {
+    console.log("tasks", tasks);
+    const filteredData = tasks.filter((item) => {
       if (index === 1) return true; // All
       if (index === 2) return item.state === "0"; // In Progress
       if (index === 3) return item.state === "1"; // Completed
       return false;
     });
-    setTasks(filteredData);
+    console.log("Filtered data:", filteredData);
+    setFilteredTasks(filteredData);
   };
 
   const [open, setOpen] = useState(false);
   const [isFormValid, setIsFormValid] = useState(true);
-  const [tasks, setTasks] = useState(dataSource);
+
   const [confirmLoading, setConfirmLoading] = useState(false);
 
   const formRef = useRef();
@@ -76,21 +107,23 @@ const App = () => {
   const handleModalOK = async () => {
     formRef.current.submit();
     try {
-      const values = await formRef.current.validateFields();
-      console.log("values", values);
+      await formRef.current.validateFields();
+      const values = formRef.current.getFieldsValue();
       setOpen(false);
       setConfirmLoading(true);
       // mock async operation
       setTimeout(() => {
-        setTasks([
-          ...tasks,
-          {
-            id: (tasks.length + 1).toString(),
-            description: values.description,
-            state: "0",
-            time: values.completeTime.format("YYYY-MM-DD HH:mm:ss"),
-          },
-        ]);
+        const newTask = {
+          id: (tasks.length > 0
+            ? Math.max(...tasks.map((task) => +task.id)) + 1
+            : 1
+          ).toString(),
+          description: values.description,
+          state: "0",
+          time: values.completeTime.format("YYYY-MM-DD HH:mm:ss"),
+        };
+        setTasks([...tasks, newTask]);
+        setFilteredTasks([...tasks, newTask]);
         setConfirmLoading(false);
         message.success("Added successfully!");
       }, 1000);
@@ -110,6 +143,7 @@ const App = () => {
     console.log("Delete", record);
     const newData = tasks.filter((item) => item.id !== record.id);
     setTasks(newData);
+    setFilteredTasks(newData);
     message.success("Deleted successfully!");
   };
   const onCompleteConform = (record) => {
@@ -121,6 +155,7 @@ const App = () => {
       return item;
     });
     setTasks(newData);
+    setFilteredTasks(newData);
     console.log("newData", newData);
     message.success("Completed successfully!");
   };
@@ -149,7 +184,7 @@ const App = () => {
         ))}
       </div>
       <CustomTable
-        dataSource={tasks}
+        dataSource={filteredTasks}
         columns={columns}
         onCompleteConform={onCompleteConform}
         onDeleteConform={onDeleteConform}
